@@ -9,7 +9,7 @@ var plataformas;
 var juego = new Phaser.Game(1280, 480, Phaser.CANVAS, 'bloque_juego');
 var bloque;
 var piedras;
-var puntaje=0;
+var puntaje = 0;
 var textoPuntaje;
 var textoVictoria;
 var fondoVictoria;
@@ -22,47 +22,60 @@ var impulsoSalto = 0;
 var musicaMenu;
 var musicaHistoria;
 var musicaJuego;
-
-//PIXEL perfect
-juego.antialias= false;
+var musicaVictoriaNivel1;
+var sonidoImpacto;
+var sonidoVictoria;
+var sonidoGameOver;
+var juegoTerminado = false;
+//PIXEL 
+juego.antialias = false;
 
 var estadoPrincipal = {
-    
+
     preload: function () {
         // Carga todos los recursos
         juego.load.image('fondo', 'img/portadaSinTitulo.png');
         //
         juego.load.spritesheet('personas', 'img/personajeInca.png', 24, 48);
 
-        juego.load.spritesheet('tiles','img/tileset.png',16,16);
+        juego.load.spritesheet('tiles', 'img/tileset.png', 16, 16);
 
-        juego.load.audio( 'musicaJuegos','audio/nivelesAudio.mp3'
-);
+        juego.load.audio('musicaJuegos', 'audio/nivelesAudio.mp3'
+        );
 
-
+        juego.load.audio(
+            'musicaVictoriaNivel1',
+            'audio/completarNivelSonido.mp3'
+        );
 
 
     },
 
     create: function () {
 
-if(musicaHistoria){
+        if (musicaHistoria) {
 
-    musicaHistoria.stop();
-}
-
-
-if(musicaJuego){
-
-    musicaJuego.stop();
-}
+            musicaHistoria.stop();
+        }
 
 
-musicaJuego = juego.add.audio(
+        if (musicaJuego) {
 
-    'musicaJuegos'
-);
-        
+            musicaJuego.stop();
+        }
+
+
+        musicaJuego = juego.add.audio(
+
+            'musicaJuegos'
+        );
+
+        musicaVictoriaNivel1 = juego.add.audio(
+            'musicaVictoriaNivel1'
+        );
+
+        musicaVictoriaNivel1.volume = 0.5;
+
         musicaJuego.loop = true;
 
 
@@ -73,58 +86,63 @@ musicaJuego = juego.add.audio(
 
         puntaje = 0;
 
-        juego.stage.smoothed=false;
-               juego.physics.startSystem(Phaser.Physics.ARCADE);
+
+        //pixeles
+        juego.stage.smoothed = false;
+
+
+        juego.physics.startSystem(Phaser.Physics.ARCADE);
         // Mostrar fondo
         fondoJuego = juego.add.tileSprite(0, 0, 1280, 480, 'fondo');
 
         fondoJuego.scale.setTo(4);
 
         //grupo plataforma
-        plataformas= juego.add.group();
-        plataformas.enableBody=true;
+        plataformas = juego.add.group();
+        plataformas.enableBody = true;
 
-        piedras=juego.add.group();
-        piedras.enableBody=true;
+        piedras = juego.add.group();
+        piedras.enableBody = true;
 
 
-        
+
         // personaje
         persona = juego.add.sprite(50, 350, 'personas');
+        //gravedad colisiones etc
         juego.physics.arcade.enable(persona);
-       //
+        //
         persona.anchor.setTo(0.5);
 
-        
-        //suelo
-        for(var i = 0; i < 80; i++){
 
-        var suelo=plataformas.create(
-                i * 16,  
+        //suelo
+        for (var i = 0; i < 80; i++) {
+
+            var suelo = plataformas.create(
+                i * 16,
                 400,
                 'tiles',
                 0
             );
-            suelo.body.immovable=true;
+            suelo.body.immovable = true;
 
         }
 
         //debajo del suelo
 
 
-        for(var y = 416; y < 480; y += 16){
+        for (var y = 416; y < 480; y += 16) {
 
-        for(var x = 0; x < 1280; x += 16){
+            for (var x = 0; x < 1280; x += 16) {
 
-            juego.add.sprite(
-                x,
-                y,
-                'tiles',
-                12
-            );
+                juego.add.sprite(
+                    x,
+                    y,
+                    'tiles',
+                    12
+                );
 
+            }
         }
-    }
 
 
         //////////*
@@ -143,11 +161,11 @@ musicaJuego = juego.add.audio(
 
             {
                 font: '24px Arial',
-                fill:'#f4d35e',
+                fill: '#f4d35e',
 
-                stroke:'#3b2200',
+                stroke: '#3b2200',
 
-                strokeThickness:4
+                strokeThickness: 4
             }
         );
 
@@ -175,9 +193,9 @@ musicaJuego = juego.add.audio(
 
         // fondo oscuro transparente
 
-        fondoVictoria = juego.add.graphics(0,0);
+        fondoVictoria = juego.add.graphics(0, 0);
 
-        fondoVictoria.beginFill(0x000000,0.7);
+        fondoVictoria.beginFill(0x000000, 0.7);
 
         fondoVictoria.drawRect(
             0,
@@ -190,7 +208,7 @@ musicaJuego = juego.add.audio(
 
         fondoVictoria.visible = false;
 
-       // boton siguiente nivel
+        // boton siguiente nivel
 
         botonSiguiente = juego.add.text(
 
@@ -210,495 +228,512 @@ musicaJuego = juego.add.audio(
 
         botonSiguiente.visible = false;
 
-        botonSiguiente.inputEnabled = true; 
+        botonSiguiente.inputEnabled = true;
 
 
-      //
+        //
 
         botonSiguiente.events.onInputDown.add(
 
-    siguienteNivel,
+            siguienteNivel,
 
-    this
-);
-                textoVictoria.bringToTop();
+            this
+        );
+        textoVictoria.bringToTop();
 
         botonSiguiente.bringToTop();
 
         textoPuntaje.bringToTop();
 
-        
+
         //bloque 1
-         for(var i = 0; i < 5 ; i++){
+        for (var i = 0; i < 5; i++) {
 
             var bloque = plataformas.create(
                 175 + (i * 16),
                 280,
                 'tiles',
                 6
-             );
+            );
 
             bloque.body.immovable = true;
-        }   
-
-
-       // crear 10 piedras
-/* 
-        for(var i = 0; i < 10; i++){
-
-             var x = juego.rnd.integerInRange(
-                100,
-                1100
-            );
-
-            var piedra = piedras.create(
-
-                x,
-
-                0,
-
-                'tiles',
-
-                9
-            );
-
-            piedra.body.gravity.y = 500;
         }
- */
 
 
-// PIEDRAS FIJAS
+        // crear 10 piedras
+        /* 
+                for(var i = 0; i < 10; i++){
+        
+                     var x = juego.rnd.integerInRange(
+                        100,
+                        1100
+                    );
+        
+                    var piedra = piedras.create(
+        
+                        x,
+        
+                        0,
+        
+                        'tiles',
+        
+                        9
+                    );
+        
+                    piedra.body.gravity.y = 500;
+                }
+         */
 
 
-// piedra 1
-
-var piedra = piedras.create(
-
-    130,
-    150,
-
-    'tiles',
-
-    9
-);
-//piedra.body.immovable = true;
-piedra.body.gravity.y = 500;
-
-piedra = piedras.create( 430,250,'tiles',9);
-piedra.body.gravity.y = 500;
-piedra = piedras.create( 700,200,'tiles',9);
-piedra.body.gravity.y = 500;
-piedra = piedras.create(980,140,'tiles', 9);
-
-piedra.body.gravity.y = 500;
+        // PIEDRAS FIJAS
 
 
-piedra = piedras.create( 1180,360,'tiles',9);
+        // piedra 1
 
-piedra.body.gravity.y = 500;
+        var piedra = piedras.create(
 
-piedra = piedras.create( 300,220,'tiles', 9);
-piedra.body.gravity.y = 500;
+            130,
+            150,
+
+            'tiles',
+
+            9
+        );
+        //piedra.body.immovable = true;
+        piedra.body.gravity.y = 500;
+
+        piedra = piedras.create(430, 250, 'tiles', 9);
+        piedra.body.gravity.y = 500;
+        piedra = piedras.create(700, 200, 'tiles', 9);
+        piedra.body.gravity.y = 500;
+        piedra = piedras.create(980, 140, 'tiles', 9);
+
+        piedra.body.gravity.y = 500;
 
 
-piedra = piedras.create(560,180,'tiles', 9);
+        piedra = piedras.create(1180, 360, 'tiles', 9);
 
-piedra.body.gravity.y = 500;
+        piedra.body.gravity.y = 500;
 
-piedra = piedras.create(760, 180,'tiles', 9);
-
-piedra.body.gravity.y = 500;
-piedra = piedras.create(880, 120, 'tiles',
-
-    9
-);
-
-piedra.body.gravity.y = 500;
+        piedra = piedras.create(300, 220, 'tiles', 9);
+        piedra.body.gravity.y = 500;
 
 
-// piedra 10
+        piedra = piedras.create(560, 180, 'tiles', 9);
 
-piedra = piedras.create(1080,300,'tiles',9
-);
+        piedra.body.gravity.y = 500;
 
-piedra.body.gravity.y = 500;
+        piedra = piedras.create(760, 180, 'tiles', 9);
+
+        piedra.body.gravity.y = 500;
+        piedra = piedras.create(880, 120, 'tiles',
+
+            9
+        );
+
+        piedra.body.gravity.y = 500;
+
+
+        // piedra 10
+
+        piedra = piedras.create(1080, 300, 'tiles', 9
+        );
+
+        piedra.body.gravity.y = 500;
 
 
 
         // bloque 2
 
-            for(var i = 0; i < 5; i++){
+        for (var i = 0; i < 5; i++) {
 
-                var bloque = plataformas.create(
-                    270  + (i * 16),
-                    220,
-                    'tiles',
-                    6
-                );
+            var bloque = plataformas.create(
+                270 + (i * 16),
+                220,
+                'tiles',
+                6
+            );
 
-                bloque.body.immovable = true;
-            }
+            bloque.body.immovable = true;
+        }
 
 
-            // linea 3
+        // bloque inicial
+        for (var y = 0; y < 3; y++) {
 
-         /*    for(var i = 0; i < 4; i++){
+            for (var x = 0; x < 3; x++) {
 
-                var bloque = plataformas.create(
-                    340 + (i * 16),
-                    170,
-                    'tiles',
-                    6
-                );
+                // tile superior
+                var frame;
 
-                bloque.body.immovable = true;
-            }
- */
-            // bloque inicial
-            for(var y = 0; y < 3; y++){
+                if (y == 0) {
 
-                for(var x = 0; x < 3; x++){
+                    frame = 6;
 
-                    // tile superior
-                    var frame;
+                } else {
 
-                    if(y == 0){
-
-                        frame = 6;
- 
-                    }else{
-
-                        frame = 14;
-                    }
-
-                    var bloque = plataformas.create(
-
-                        100 + (x * 16),
-                        352 + (y * 16),
-                        'tiles',
-                        frame
-                    );
-
-                    bloque.body.immovable = true;
+                    frame = 14;
                 }
-            }
-
-
-
-
-// MURO 1
-
-
-for(var y = 0; y < 2; y++){
-
-    for(var x = 0; x < 5; x++){
-
-        var bloque = plataformas.create(
-
-            400 + (x * 16),
-            368 + (y * 16),
-
-            'tiles',
-
-            11
-        );
-
-        bloque.body.immovable = true;
-    }
-}
-
-
-
-// ======================================
-// MURO 2 (un poco más alto)
-
-
-for(var y = 0; y < 2; y++){
-
-    for(var x = 0; x < 7; x++){
-
-        var bloque = plataformas.create(
-
-            480 + (x * 16),
-            295 + (y * 16),
-
-            'tiles',
-
-            11
-        );
-
-        bloque.body.immovable = true;
-    }
-}
-
-
-///
-
-  // bloque largo
-
-            for(var i = 0; i < 12; i++){
 
                 var bloque = plataformas.create(
-                    590  + (i * 16),
-                    220,
+
+                    100 + (x * 16),
+                    352 + (y * 16),
                     'tiles',
-                    6
+                    frame
                 );
 
                 bloque.body.immovable = true;
             }
+        }
 
-//bloque largo 2
 
-                for(var i = 0; i < 12; i++){
+
+
+        // MURO 1
+
+
+        for (var y = 0; y < 2; y++) {
+
+            for (var x = 0; x < 5; x++) {
 
                 var bloque = plataformas.create(
-                    800  + (i * 16),
-                    170,
+
+                    400 + (x * 16),
+                    368 + (y * 16),
+
                     'tiles',
-                    6
+
+                    11
                 );
 
                 bloque.body.immovable = true;
             }
+        }
 
 
 
-//bloque largo 3
+        //
+        // MURO 2 (un poco más alto)
 
-                for(var i = 0; i < 4; i++){
+
+        for (var y = 0; y < 2; y++) {
+
+            for (var x = 0; x < 7; x++) {
 
                 var bloque = plataformas.create(
-                    1000  + (i * 16),
-                    240,
+
+                    480 + (x * 16),
+                    295 + (y * 16),
+
                     'tiles',
-                    6
+
+                    11
                 );
 
                 bloque.body.immovable = true;
             }
+        }
+
+
+        ///
+
+        // bloque largo
+
+        for (var i = 0; i < 12; i++) {
+
+            var bloque = plataformas.create(
+                590 + (i * 16),
+                220,
+                'tiles',
+                6
+            );
+
+            bloque.body.immovable = true;
+        }
+
+        //bloque largo 2
+
+        for (var i = 0; i < 12; i++) {
+
+            var bloque = plataformas.create(
+                800 + (i * 16),
+                170,
+                'tiles',
+                6
+            );
+
+            bloque.body.immovable = true;
+        }
+
+
+
+        //bloque largo 3
+
+        for (var i = 0; i < 4; i++) {
+
+            var bloque = plataformas.create(
+                1000 + (i * 16),
+                240,
+                'tiles',
+                6
+            );
+
+            bloque.body.immovable = true;
+        }
 
 
 
 
 
-////ultimo bloque
+        ////ultimo bloque
 
 
-                for(var i = 0; i < 5; i++){
+        for (var i = 0; i < 5; i++) {
+
+            var bloque = plataformas.create(
+                1200 + (i * 16),
+                310,
+                'tiles',
+                6
+            );
+
+            bloque.body.immovable = true;
+        }
+
+
+        // MURO 1
+        // ======================================
+
+        for (var y = 0; y < 2; y++) {
+
+            for (var x = 0; x < 10; x++) {
 
                 var bloque = plataformas.create(
-                    1200  + (i * 16),
-                    310,
+
+                    650 + (x * 16),
+                    368 + (y * 16),
+
                     'tiles',
-                    6
+
+                    11
                 );
 
                 bloque.body.immovable = true;
             }
-
-
-// MURO 1
-// ======================================
-
-for(var y = 0; y < 2; y++){
-
-    for(var x = 0; x < 10; x++){
-
-        var bloque = plataformas.create(
-
-            650 + (x * 16),
-            368 + (y * 16),
-
-            'tiles',
-
-            11
-        );
-
-        bloque.body.immovable = true;
-    }
-}
+        }
 
 
 
 
-   // bloque inicial
-            for(var y = 0; y < 3; y++){
+        // bloque inicial
+        for (var y = 0; y < 3; y++) {
 
-                for(var x = 0; x < 3; x++){
+            for (var x = 0; x < 3; x++) {
 
-                    // tile superior
-                    var frame;
+                // tile superior
+                var frame;
 
-                    if(y == 0){
+                if (y == 0) {
 
-                        frame = 6;
+                    frame = 6;
 
-                    }else{
+                } else {
 
-                        frame = 14;
-                    }
-
-                    var bloque = plataformas.create(
-
-                        1000 + (x * 16),
-                        352 + (y * 16),
-                        'tiles',
-                        frame
-                    );
-
-                    bloque.body.immovable = true;
+                    frame = 14;
                 }
+
+                var bloque = plataformas.create(
+
+                    1000 + (x * 16),
+                    352 + (y * 16),
+                    'tiles',
+                    frame
+                );
+
+                bloque.body.immovable = true;
             }
+        }
 
 
         // Configurar teclas
-        teclaDerecha  = juego.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+        teclaDerecha = juego.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
         teclaIzquierda = juego.input.keyboard.addKey(Phaser.Keyboard.LEFT);
-        teclaSalto   = juego.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-          
+        teclaSalto = juego.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+
 
         // Física
- 
+
         //juego.physics.arcade.enable(persona);
-        persona.body.setSize(20,36,2,12);
+
+        //hitbox personaje
+        persona.body.setSize(20, 36, 2, 12);
         // persona.body.setSize(20,40,2,8);
 
 
         //AGRE
-        persona.body.gravity.y=700;
+        persona.body.gravity.y = 700;
+        //no salga de pantalla
 
         persona.body.collideWorldBounds = true;
 
         // Animaciones
-    
-        persona.animations.add('derecha',   [0,1,2], 6, true);
-       // persona.animations.add('izquierda', [3,4,5], 10, true);
-        persona.animations.add('saltar',     [6,7,8], 10, true);
+
+        persona.animations.add('derecha', [0, 1, 2], 6, true);
+        // persona.animations.add('izquierda', [3,4,5], 10, true);
+        persona.animations.add('saltar', [6, 7, 8], 10, true);
 
 
         // =================================
         // CONTROL POR VOZ
-     
+
         reconocimiento =
             new webkitSpeechRecognition();
 
         reconocimiento.lang = 'es-PE';
 
+
+        //micro escucha continuamente
         reconocimiento.continuous = true;
 
 
 
-        // resultados rápidos
-reconocimiento.interimResults = false;
+        // revita resultados incompletos
+        reconocimiento.interimResults = false;
 
 
 
-setTimeout(function(){
+        setTimeout(function () {
 
-    reconocimiento.start();
+            reconocimiento.start();
 
-},80);
+        }, 80);
 
-reconocimiento.onend = function(){
+        reconocimiento.onend = function () {
 
-    setTimeout(function(){
-
-        reconocimiento.start();
-
-    },80);
-};
-
-
-    reconocimiento.onresult = function(event){
-
-    var comando = event.results[
-        event.results.length - 1
-    ][0].transcript;
-
-    comando = comando.toLowerCase();
-
-    console.log(comando);
-
-
-    // derecha
-
-    if(comando.includes('derecha')){
-
-    moverDerecha = true;
-
-        moverIzquierda = false;
-
-  /*   tiempoMovimiento =
-        juego.time.now + 400; */
-        
-    }
-
-
-    // izquierda
-
-    if(comando.includes('izquierda') || comando.includes('isquierda') || comando.includes('iz') ){
-         
-          moverIzquierda = true;
-
-    moverDerecha = false;
-  /*   tiempoMovimiento =
-        juego.time.now + 400; */
-    }
-
-// detener
-
-if(comando.includes('alto')){
-
-    moverDerecha = false;
-
-    moverIzquierda = false;
-}
-
-
-
+            /*  setTimeout(function () {
  
-if(comando.includes('salta')){
+                 reconocimiento.start();
+ 
+ 
+ 
+ 
+             }, 80); */
+            setTimeout(function () {
 
-    if( persona.body.touching.down
-        ||
-        persona.body.blocked.down){
+                try {
 
-        // salto
+                    reconocimiento.start();
 
-        persona.body.velocity.y = -450;
-         
-        // detener movimiento continuo
+                } catch (error) {
 
-moverDerecha = false;
+                    console.log(
+                        "Micro ya iniciado"
+                    );
+                }
 
-moverIzquierda = false;
-
-
-
-if(persona.scale.x > 0){
-
-    impulsoSalto = 80;
-
-}else{
-
-    impulsoSalto = -80;
-}
+            }, 300);
 
 
+        };
 
-    }
-}
-        
 
-    // disparar
+        reconocimiento.onresult = function (event) {
 
-    if(comando.includes('dispara')){
+            var comando = event.results[
+                event.results.length - 1
+            ][0].transcript;
 
-        dispararPiedra();
-    }
+            comando = comando.toLowerCase().trim();
 
-};
+            console.log(comando);
+
+            if (comando.length > 20) {
+                return;
+            }
+            // derecha
+
+            if (comando.includes('derecha') || comando.includes('avanza')) {
+
+                moverDerecha = true;
+
+                moverIzquierda = false;
+
+                /*   tiempoMovimiento =
+                      juego.time.now + 400; */
+
+            }
+
+
+            // izquierda
+
+            if (comando.includes('izquierda') || comando.includes('isquierda')
+                || comando.includes('atras') || comando.includes('atrás')) {
+
+                moverIzquierda = true;
+
+                moverDerecha = false;
+                /*   tiempoMovimiento =
+                      juego.time.now + 400; */
+            }
+
+            // detener
+
+            if (comando.includes('alto')) {
+
+                moverDerecha = false;
+
+                moverIzquierda = false;
+            }
+
+
+
+
+            if (comando.includes('salta')
+                || comando.includes('falta')
+             || comando.includes('arriba') 
+            
+            ) {
+
+                if (persona.body.touching.down
+                    ||
+                    persona.body.blocked.down) {
+
+                    // salto
+
+                    persona.body.velocity.y = -450;
+
+                    // detener movimiento continuo
+
+                    moverDerecha = false;
+
+                    moverIzquierda = false;
+
+
+
+                    if (persona.scale.x > 0) {
+
+                        impulsoSalto = 80;
+
+                    } else {
+
+                        impulsoSalto = -80;
+                    }
+
+
+
+                }
+            }
+
+
+            // disparar
+
+            if (comando.includes('dispara')) {
+
+                dispararPiedra();
+            }
+
+        };
 
 
 
@@ -708,18 +743,18 @@ if(persona.scale.x > 0){
     update: function () {
 
 
-fondoJuego.tilePosition.x -= 0.15;
-           juego.physics.arcade.collide(
-                persona,
-                plataformas
-            );
+        fondoJuego.tilePosition.x -= 0.15;
+        juego.physics.arcade.collide(
+            persona,
+            plataformas
+        );
 
-            juego.physics.arcade.collide(
-                piedras,
-                plataformas
-            );
+        juego.physics.arcade.collide(
+            piedras,
+            plataformas
+        );
 
-            juego.physics.arcade.overlap(
+        juego.physics.arcade.overlap(
 
             persona,
 
@@ -737,8 +772,8 @@ fondoJuego.tilePosition.x -= 0.15;
 
 
 
-            //detiene horizontal
-            persona.body.velocity.x=0;
+        //detiene horizontal
+        persona.body.velocity.x = 0;
 
 
         // impulso del salto
@@ -754,7 +789,7 @@ fondoJuego.tilePosition.x -= 0.15;
         //
 
 
-        if(moverDerecha){
+        if (moverDerecha) {
 
             persona.body.velocity.x = 120;
 
@@ -764,7 +799,7 @@ fondoJuego.tilePosition.x -= 0.15;
         }
 
 
-        if(moverIzquierda){
+        if (moverIzquierda) {
 
             persona.body.velocity.x = -120;
 
@@ -778,31 +813,38 @@ fondoJuego.tilePosition.x -= 0.15;
 
         // Movimiento y animaciones
         if (teclaDerecha.isDown) {
-             persona.body.velocity.x=200;
-          //  persona.position.x += 2;
+            persona.body.velocity.x = 200;
+            //  persona.position.x += 2;
             persona.animations.play('derecha');
-            persona.scale.x=2;
+            persona.scale.x = 2;
         }
         else if (teclaIzquierda.isDown) {
-            persona.body.velocity.x=-200;
-           // persona.position.x -= 2;
+            persona.body.velocity.x = -200;
+            // persona.position.x -= 2;
             persona.animations.play('derecha');
-            persona.scale.x=-2;
+            persona.scale.x = -2;
         }
-        else  {
+        /*   else {
+              persona.animations.stop();
+          } */
+
+        else if (
+            !moverDerecha &&
+            !moverIzquierda
+        ) {
+
             persona.animations.stop();
         }
-       // if (teclaSalto.isDown && persona.body.touching.down) {
-       if (teclaSalto.isDown && ( persona.body.touching.down
-        ||
-        persona.body.blocked.down)) {
-             persona.body.velocity.y=-450;
+        // if (teclaSalto.isDown && persona.body.touching.down) {
+        if (teclaSalto.isDown && (persona.body.touching.down
+            ||
+            persona.body.blocked.down)) {
+            persona.body.velocity.y = -450;
             persona.animations.play('saltar');
         }
     }
 };
 
-  
 
 
 
@@ -811,7 +853,8 @@ fondoJuego.tilePosition.x -= 0.15;
 
 
 
-function recogerPiedra(persona,piedra){
+
+function recogerPiedra(persona, piedra) {
 
     piedra.kill();
 
@@ -823,8 +866,9 @@ function recogerPiedra(persona,piedra){
 
     // ganar nivel
 
-    if(puntaje >= 100){
+    if (puntaje >= 100) {
         // textoVictoria.visible = true;
+        musicaVictoriaNivel1.play();
         fondoVictoria.visible = true;
 
         textoVictoria.visible = true;
@@ -834,11 +878,14 @@ function recogerPiedra(persona,piedra){
 
 
         persona.body.velocity.x = 0;
-        
+
     }
 }
 //siguiente nivel aún en proceso
-function siguienteNivel(){
+function siguienteNivel() {
+    if (reconocimiento) {
+        reconocimiento.stop();
+    }
 
     juego.state.start('nivel2');
 }
@@ -868,138 +915,189 @@ var direccionEnemigo3 = 1;
 
 var enemigosEliminados = 0;
 
-
+var destinoX = 0;
 
 var estadoNivel2 = {
 
 
-       preload: function () {
+    preload: function () {
         // Carga todos los recursos
         juego.load.image('fondo', 'img/fondoNubes.png');
         //
         juego.load.spritesheet('personas', 'img/personajeInca.png', 24, 48);
 
-        juego.load.spritesheet('tiles','img/tileset.png',16,16);
-        juego.load.image('enemigo','img/enemigo.png')
+        juego.load.spritesheet('tiles', 'img/tileset.png', 16, 16);
+        juego.load.image('enemigo', 'img/enemigo.png');
+        juego.load.image(
+            'impacto',
+            'img/impacto.png'
+        );
+        juego.load.audio(
+
+            'impactoSonido',
+
+            'audio/sonidoRoca.mp3'
+        );
+
+        juego.load.audio(
+            'victoria',
+            'audio/ganasteSonido.mp3'
+        );
+
+        juego.load.audio(
+            'gameover',
+            'audio/perdisteSonido.mp3'
+        );
+
+
+
+
     },
 
 
 
 
-    create: function(){
-
+    create: function () {
+        juegoTerminado = false;
         enemigosEliminados = 0;
         textoEnemigos =
-        null;
+            null;
 
         juego.stage.backgroundColor = '#222222';
 
+        sonidoImpacto = juego.add.audio(
 
-         // Mostrar fondo
+            'impactoSonido'
+        );
+        sonidoVictoria = juego.add.audio(
+            'victoria'
+        );
+
+        sonidoGameOver = juego.add.audio(
+            'gameover'
+        );
+
+
+
+        if (musicaJuego) {
+
+            musicaJuego.stop();
+        }
+
+        musicaJuego = juego.add.audio(
+            'musicaJuegos'
+        );
+
+        musicaJuego.loop = true;
+
+        musicaJuego.volume = 0.10;
+
+        musicaJuego.play();
+        // Mostrar fondo
         fondoJuego = juego.add.tileSprite(0, 0, 1280, 480, 'fondo');
         fondoJuego.scale.setTo(4);
 
-         //grupo plataforma
-        plataformas= juego.add.group();
-        plataformas.enableBody=true;
+        //grupo plataforma
+        plataformas = juego.add.group();
+        plataformas.enableBody = true;
 
-        piedras=juego.add.group();
-        piedras.enableBody=true;
+        piedras = juego.add.group();
+        piedras.enableBody = true;
 
         //disparos
 
-        disparos=juego.add.group();
-        disparos.enableBody=true;
+        disparos = juego.add.group();
+        disparos.enableBody = true;
 
-        
+
         // personaje
         persona = juego.add.sprite(50, 350, 'personas');
-        
 
-       //
+
+        //
         persona.anchor.setTo(0.5);
 
-         persona.scale.setTo(2);
-            
+        persona.scale.setTo(2);
 
 
 
 
-// TEXTO VICTORIA
 
-textoVictoria = juego.add.text(
+        // TEXTO VICTORIA
 
-    juego.width / 2,
-    juego.height / 2 - 60,
+        textoVictoria = juego.add.text(
 
-    '¡JUEGO COMPLETADO!',
+            juego.width / 2,
+            juego.height / 2 - 60,
 
-    {
-        font:'48px Arial',
-        fill:'#ffff00',
-        fontWeight:'bold'
-    }
-);
+            '¡JUEGO COMPLETADO!',
 
-textoVictoria.anchor.setTo(0.5);
+            {
+                font: '48px Arial',
+                fill: '#ffff00',
+                fontWeight: 'bold'
+            }
+        );
 
-textoVictoria.visible = false;
+        textoVictoria.anchor.setTo(0.5);
+
+        textoVictoria.visible = false;
 
 
 
         // =================================
-// ENEMIGO 1
+        // ENEMIGO 1
 
 
-enemigo1 = juego.add.sprite(
+        enemigo1 = juego.add.sprite(
 
-    980,
-    300,
+            980,
+            300,
 
-    'enemigo'
-);
+            'enemigo'
+        );
 
-enemigo1.scale.setTo(1.2);
-
-
-
-// ENEMIGO 2
-
-
-enemigo2 = juego.add.sprite(
-
-    650,
-    170,
-
-    'enemigo'
-);
-
-enemigo2.scale.setTo(1.2);
+        enemigo1.scale.setTo(1.2);
 
 
 
+        // ENEMIGO 2
 
-enemigo3 = juego.add.sprite(
 
-    700,
-    300,
+        enemigo2 = juego.add.sprite(
 
-    'enemigo'
-);
+            650,
+            170,
 
-enemigo3.scale.setTo(1.2);
+            'enemigo'
+        );
+
+        enemigo2.scale.setTo(1.2);
 
 
 
 
+        enemigo3 = juego.add.sprite(
 
-    
+            700,
+            300,
 
-   
+            'enemigo'
+        );
+
+        enemigo3.scale.setTo(1.2);
+
+
+
+
+
+
+
+
         //suelo
-       // suelo con huecos
+        // suelo con huecos
 
-        for(var i = 0; i < 80; i++){
+        for (var i = 0; i < 80; i++) {
 
             // HUECO 1
             /* if(i >= 15 && i <= 20){
@@ -1007,17 +1105,17 @@ enemigo3.scale.setTo(1.2);
                 continue;
             }
  */
-        /*     // HUECO 2
-            if(i >= 35 && i <= 40){
-
-                continue;
-            } */
+            /*     // HUECO 2
+                if(i >= 35 && i <= 40){
+    
+                    continue;
+                } */
 
             // HUECO 3
-           /*  if(i >= 55 && i <= 60){
-
-                continue;
-            } */
+            /*  if(i >= 55 && i <= 60){
+ 
+                 continue;
+             } */
 
             var suelo = plataformas.create(
 
@@ -1034,485 +1132,529 @@ enemigo3.scale.setTo(1.2);
         }
 
         //debajo del suelo
-// debajo del suelo con huecos
+        // debajo del suelo con huecos
 
-for(var y = 416; y < 480; y += 16){
+        for (var y = 416; y < 480; y += 16) {
 
-    for(var x = 0; x < 1280; x += 16){
+            for (var x = 0; x < 1280; x += 16) {
 
-        var tile = x / 16;
+                var tile = x / 16;
 
 
-        // hueco 1
-        if(tile >= 15 && tile <= 20){
+                // hueco 1
+                if (tile >= 15 && tile <= 20) {
 
-            continue;
+                    continue;
+                }
+
+                // hueco 3
+                if (tile >= 55 && tile <= 60) {
+
+                    continue;
+                }
+
+
+                juego.add.sprite(
+
+                    x,
+
+                    y,
+
+                    'tiles',
+
+                    12
+                );
+            }
         }
 
-        // hueco 3
-        if(tile >= 55 && tile <= 60){
 
-            continue;
+
+
+
+
+        //// bloque largo
+
+        for (var i = 0; i < 16; i++) {
+
+            var bloque = plataformas.create(
+                300 + (i * 16),
+                285,
+                'tiles',
+                6
+            );
+
+            bloque.body.immovable = true;
         }
 
 
-        juego.add.sprite(
-
-            x,
-
-            y,
-
-            'tiles',
-
-            12
-        );
-    }
-}
+        // MURO
 
 
+        for (var y = 0; y < 3; y++) {
 
-
-
-
-//// bloque largo
-
-            for(var i = 0; i < 16; i++){
+            for (var x = 0; x < 4; x++) {
 
                 var bloque = plataformas.create(
-                    300  + (i * 16),
-                285,
+
+                    220 + (x * 16),
+                    385 - (y * 16),
+
                     'tiles',
-                    6
+
+                    11
                 );
 
                 bloque.body.immovable = true;
             }
-
-
-// MURO
-
-
-for(var y = 0; y < 3; y++){
-
-    for(var x = 0; x < 4; x++){
-
-        var bloque = plataformas.create(
-
-            220 + (x * 16),
-            385 - (y * 16),
-
-            'tiles',
-
-            11
-        );
-
-        bloque.body.immovable = true;
-    }
-}
+        }
 
 
 
-for(var y = 0; y < 3; y++){
+        for (var y = 0; y < 3; y++) {
 
-    for(var x = 0; x < 4; x++){
-
-        var bloque = plataformas.create(
-
-            840 + (x * 16),
-            385 - (y * 16),
-
-            'tiles',
-
-            11
-        );
-
-        bloque.body.immovable = true;
-    }
-}
-
-
-
-
-
- //
-  //// bloque largo
-
-            for(var i = 0; i < 14; i++){
+            for (var x = 0; x < 4; x++) {
 
                 var bloque = plataformas.create(
-                    524  + (i * 16),
-                230,
+
+                    840 + (x * 16),
+                    385 - (y * 16),
+
                     'tiles',
-                    6
+
+                    11
                 );
 
                 bloque.body.immovable = true;
-            }           
+            }
+        }
 
 
 
-   // Configurar teclas
-        teclaDerecha  = juego.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+
+
+        //
+        //// bloque largo
+
+        for (var i = 0; i < 14; i++) {
+
+            var bloque = plataformas.create(
+                524 + (i * 16),
+                230,
+                'tiles',
+                6
+            );
+
+            bloque.body.immovable = true;
+        }
+
+
+
+        // Configurar teclas
+        teclaDerecha = juego.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
         teclaIzquierda = juego.input.keyboard.addKey(Phaser.Keyboard.LEFT);
-        teclaSalto   = juego.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-          teclaDisparo = juego.input.keyboard.addKey(
+        teclaSalto = juego.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+        teclaDisparo = juego.input.keyboard.addKey(
 
-    Phaser.Keyboard.X
-);
+            Phaser.Keyboard.X
+        );
 
         // Física
         juego.physics.startSystem(Phaser.Physics.ARCADE);
         juego.physics.arcade.enable(persona);
         juego.physics.arcade.enable(enemigo1);
 
-         juego.physics.arcade.enable(enemigo2);
-          juego.physics.arcade.enable(enemigo3);
+        juego.physics.arcade.enable(enemigo2);
+        juego.physics.arcade.enable(enemigo3);
 
-         //enemigo.body.gravity.y = 700;
-            enemigo1.body.gravity.y = 700;
+        //enemigo.body.gravity.y = 700;
+        enemigo1.body.gravity.y = 700;
 
-            enemigo2.body.gravity.y = 700;
+        enemigo2.body.gravity.y = 700;
 
-            enemigo3.body.gravity.y = 700;
-
-          
+        enemigo3.body.gravity.y = 700;
 
 
 
-        persona.body.setSize(20,36,2,12);
+
+
+        persona.body.setSize(20, 36, 2, 12);
         // persona.body.setSize(20,40,2,8);
 
 
         //AGRE
-        persona.body.gravity.y=700;
+        persona.body.gravity.y = 700;
 
         persona.body.collideWorldBounds = true;
 
         // Animaciones
-    
-        persona.animations.add('derecha',   [0,1,2], 6, true);
-       // persona.animations.add('izquierda', [3,4,5], 10, true);
-        persona.animations.add('saltar',     [6,7,8], 10, true);
+
+        persona.animations.add('derecha', [0, 1, 2], 6, true);
+        // persona.animations.add('izquierda', [3,4,5], 10, true);
+        persona.animations.add('saltar', [6, 7, 8], 10, true);
 
 
 
-// =================================
-// CONTROL POR VOZ
-// =================================
+        // =================================
+        // CONTROL POR VOZ
+        // =================================
 
-reconocimiento =
-    new webkitSpeechRecognition();
+        reconocimiento =
+            new webkitSpeechRecognition();
 
-reconocimiento.lang = 'es-PE';
+        reconocimiento.lang = 'es-PE';
 
-reconocimiento.continuous = true;
+        reconocimiento.continuous = true;
 
-reconocimiento.interimResults = false;
-
-
-// iniciar
-
-setTimeout(function(){
-
-    reconocimiento.start();
-
-},80);
+        reconocimiento.interimResults = false;
 
 
-// reiniciar micro
+        // iniciar
 
-reconocimiento.onend = function(){
+        setTimeout(function () {
 
-    setTimeout(function(){
+            reconocimiento.start();
 
-        reconocimiento.start();
-
-    },80);
-};
+        }, 80);
 
 
-// comandos
+        // reiniciar micro
 
-reconocimiento.onresult = function(event){
+        reconocimiento.onend = function () {
+            setTimeout(function () {
 
-    var comando = event.results[
-        event.results.length - 1
-    ][0].transcript;
+                try {
 
-    comando = comando.toLowerCase();
+                    reconocimiento.start();
 
-    console.log(comando);
+                } catch (error) {
 
+                    console.log(
+                        "Micro ya iniciado"
+                    );
+                }
 
-    // derecha
-
-    if(comando.includes('derecha')){
-
-        moverDerecha = true;
-
-        moverIzquierda = false;
-    }
+            }, 300);
 
 
-    // izquierda
-
-    if(
-        comando.includes('izquierda')
-        ||
-        comando.includes('isquierda')
-        ||
-        comando.includes('iz')
-    ){
-
-        moverIzquierda = true;
-
-        moverDerecha = false;
-    }
 
 
-    // detener
-
-    if(comando.includes('alto')){
-
-        moverDerecha = false;
-
-        moverIzquierda = false;
-    }
 
 
-    // salto
-
-    if(comando.includes('salta')){
-
-        if(
-            persona.body.touching.down
-            ||
-            persona.body.blocked.down
-        ){
-
-            persona.body.velocity.y = -450;
 
 
-            // detener caminar
 
+
+        };
+
+
+        // comandos
+
+        reconocimiento.onresult = function (event) {
+
+            var comando = event.results[
+                event.results.length - 1
+            ][0].transcript;
+
+            comando = comando.toLowerCase().trim();
+
+            console.log(comando);
+
+
+            // derecha
+
+            if (comando.includes('derecha') ||
+                comando.includes('avanza')
+
+
+            ) {
+
+                /*  moverDerecha = true;
+ 
+                 moverIzquierda = false; */
+                moverDerecha = true;
+
+                moverIzquierda = false;
+/* console.log("activa derecha")
+    juego.time.events.add(
+        700,
+        function(){
+console.log("desactiva derecha")
             moverDerecha = false;
 
-            moverIzquierda = false;
-
-
-            // pequeño impulso
-
-            if(persona.scale.x > 0){
-
-                impulsoSalto = 80;
-
-            }else{
-
-                impulsoSalto = -80;
+        },
+        this
+    ); */    destinoX = persona.x + 75;
             }
-        }
-    }
 
 
-    // disparar
+            // izquierda
 
-    if(comando.includes('dispara')){
+            if (
+                comando.includes('izquierda')
+                ||
+                comando.includes('isquierda')
+                ||
+                comando.includes('atras')
+                ||
+                comando.includes('atrás')
+            ) {
 
-        dispararPiedra();
-    }
-};
+                moverIzquierda = true;
+
+                moverDerecha = false;
+
+                destinoX = persona.x - 70;
+            }
+
+
+            // detener
+
+            if (comando.includes('alto')) {
+
+                moverDerecha = false;
+
+                moverIzquierda = false;
+            }
+
+
+            // salto
+
+            if (comando.includes('salta')
+                ||
+                comando.includes('falta')
+            ||
+                comando.includes('arriba')
+            ) {
+
+                if (
+                    persona.body.touching.down
+                    ||
+                    persona.body.blocked.down
+                ) {
+
+                    persona.body.velocity.y = -450;
+
+
+                    // detener caminar
+
+                    moverDerecha = false;
+
+                    moverIzquierda = false;
+
+
+                    // pequeño impulso
+
+                    if (persona.scale.x > 0) {
+
+                        impulsoSalto = 80;
+
+                    } else {
+
+                        impulsoSalto = -80;
+                    }
+                }
+            }
+
+
+            // disparar
+
+            if (comando.includes('dispara')) {
+
+                dispararPiedra();
+            }
+        };
 
 
 
-// GAME OVER
+        // GAME OVER
 
-textoGameOver = juego.add.text(
+        textoGameOver = juego.add.text(
 
-    juego.width / 2,
-    juego.height / 2 - 60,
+            juego.width / 2,
+            juego.height / 2 - 60,
 
-    'GAME OVER',
+            'GAME OVER',
 
-    {
-        font:'48px Arial',
-        fill:'#ff0000',
-        fontWeight:'bold'
-    }
-);
+            {
+                font: '48px Arial',
+                fill: '#ff0000',
+                fontWeight: 'bold'
+            }
+        );
 
-textoGameOver.anchor.setTo(0.5);
+        textoGameOver.anchor.setTo(0.5);
 
-textoGameOver.visible = false;
+        textoGameOver.visible = false;
 
-// contador enemigos
+        // contador enemigos
 
-textoEnemigos = juego.add.text(
+        textoEnemigos = juego.add.text(
 
-    20,
-    60,
+            20,
+            60,
 
-    'Españoles derrotados: 0/3',
+            'Españoles derrotados: 0/3',
 
-    {
-        font:'24px Arial',
-        fill:'#f4d35e',
+            {
+                font: '24px Arial',
+                fill: '#f4d35e',
 
-        stroke:'#3b2200',
+                stroke: '#3b2200',
 
-        strokeThickness:4
-    }
-);
+                strokeThickness: 4
+            }
+        );
 
-// boton reintentar
+        // boton reintentar
 
-botonReintentar = juego.add.text(
+        botonReintentar = juego.add.text(
 
-    juego.width / 2,
-    juego.height / 2 + 20,
+            juego.width / 2,
+            juego.height / 2 + 20,
 
-    'REINTENTAR NIVEL 2',
+            'REINTENTAR NIVEL 2',
 
-    {
-        font:'28px Arial',
-        fill:'#ffffff',
-        backgroundColor:'#444444'
-    }
-);
+            {
+                font: '28px Arial',
+                fill: '#ffffff',
+                backgroundColor: '#444444'
+            }
+        );
 
-botonReintentar.anchor.setTo(0.5);
+        botonReintentar.anchor.setTo(0.5);
 
-botonReintentar.visible = false;
+        botonReintentar.visible = false;
 
-botonReintentar.inputEnabled = true;
-// boton volver nivel 1
+        botonReintentar.inputEnabled = true;
+        // boton volver nivel 1
 
-botonMenu = juego.add.text(
+        botonMenu = juego.add.text(
 
-    juego.width / 2,
-    juego.height / 2 + 80,
+            juego.width / 2,
+            juego.height / 2 + 80,
 
-    'VOLVER AL NIVEL 1',
+            'VOLVER AL NIVEL 1',
 
-    {
-        font:'28px Arial',
-        fill:'#ffffff',
-        backgroundColor:'#444444'
-    }
-);
+            {
+                font: '28px Arial',
+                fill: '#ffffff',
+                backgroundColor: '#444444'
+            }
+        );
 
-botonMenu.anchor.setTo(0.5);
+        botonMenu.anchor.setTo(0.5);
 
-botonMenu.visible = false;
+        botonMenu.visible = false;
 
-botonMenu.inputEnabled = true;
+        botonMenu.inputEnabled = true;
 
         botonReintentar.events.onInputDown.add(
 
-    reiniciarNivel2,
+            reiniciarNivel2,
 
-    this
-);
+            this
+        );
 
-botonMenu.events.onInputDown.add(
+        botonMenu.events.onInputDown.add(
 
-    volverNivel1,
+            volverNivel1,
 
-    this
-);
+            this
+        );
 
     },
-    
+
 
 
     update: function () {
 
         fondoJuego.tilePosition.x -= 0.15;
-           juego.physics.arcade.collide(
-                persona,
-                plataformas
-            );
-
-           
-            juego.physics.arcade.collide(
-                enemigo1,
-                plataformas
-            );
-
-            juego.physics.arcade.collide(
-                enemigo2,
-                plataformas
-            );
-
-            juego.physics.arcade.collide(
-                enemigo3,
-                plataformas
-            );
-
-            
-            // perder contra enemigos
-
-juego.physics.arcade.overlap(
-
-    persona,
-
-    enemigo1,
-
-    perderJuego,
-
-    null,
-
-    this
-);
-
-juego.physics.arcade.overlap(
-
-    persona,
-
-    enemigo2,
-
-    perderJuego,
-
-    null,
-
-    this
-);
-
-juego.physics.arcade.overlap(
-
-    persona,
-
-    enemigo3,
-
-    perderJuego,
-
-    null,
-
-    this
-);
-
-            juego.physics.arcade.collide(
-                piedras,
-                plataformas
-            );
+        juego.physics.arcade.collide(
+            persona,
+            plataformas
+        );
 
 
-            // disparos chocan con muros
+        juego.physics.arcade.collide(
+            enemigo1,
+            plataformas
+        );
 
-juego.physics.arcade.collide(
+        juego.physics.arcade.collide(
+            enemigo2,
+            plataformas
+        );
 
-    disparos,
-
-    plataformas,
-
-    destruirDisparo,
-
-    null,
-
-    this
-);
+        juego.physics.arcade.collide(
+            enemigo3,
+            plataformas
+        );
 
 
-            juego.physics.arcade.overlap(
+        // perder contra enemigos
+
+        juego.physics.arcade.overlap(
+
+            persona,
+
+            enemigo1,
+
+            perderJuego,
+
+            null,
+
+            this
+        );
+
+        juego.physics.arcade.overlap(
+
+            persona,
+
+            enemigo2,
+
+            perderJuego,
+
+            null,
+
+            this
+        );
+
+        juego.physics.arcade.overlap(
+
+            persona,
+
+            enemigo3,
+
+            perderJuego,
+
+            null,
+
+            this
+        );
+
+        juego.physics.arcade.collide(
+            piedras,
+            plataformas
+        );
+
+
+        // disparos chocan con muros
+
+        juego.physics.arcade.collide(
+
+            disparos,
+
+            plataformas,
+
+            destruirDisparo,
+
+            null,
+
+            this
+        );
+
+
+        juego.physics.arcade.overlap(
 
             persona,
 
@@ -1525,17 +1667,17 @@ juego.physics.arcade.collide(
             this
         );
 
-                   juego.physics.arcade.collide(
-                persona,
-                plataformas
-            );
+        juego.physics.arcade.collide(
+            persona,
+            plataformas
+        );
 
-            juego.physics.arcade.collide(
-                piedras,
-                plataformas
-            );
+        juego.physics.arcade.collide(
+            piedras,
+            plataformas
+        );
 
-            juego.physics.arcade.overlap(
+        juego.physics.arcade.overlap(
 
             persona,
 
@@ -1549,192 +1691,217 @@ juego.physics.arcade.collide(
         );
 
 
-// disparos enemigos
+        // disparos enemigos
 
-juego.physics.arcade.overlap(
+        juego.physics.arcade.overlap(
 
-    disparos,
+            disparos,
 
-    enemigo1,
+            enemigo1,
 
-    destruirEnemigo,
+            destruirEnemigo,
 
-    null,
+            null,
 
-    this
-);
+            this
+        );
 
-juego.physics.arcade.overlap(
+        juego.physics.arcade.overlap(
 
-    disparos,
+            disparos,
 
-    enemigo2,
+            enemigo2,
 
-    destruirEnemigo,
+            destruirEnemigo,
 
-    null,
+            null,
 
-    this
-);
+            this
+        );
 
-juego.physics.arcade.overlap(
+        juego.physics.arcade.overlap(
 
-    disparos,
+            disparos,
 
-    enemigo3,
+            enemigo3,
 
-    destruirEnemigo,
+            destruirEnemigo,
 
-    null,
+            null,
 
-    this
-);
-
-
-
-            //detiene horizontal
-            persona.body.velocity.x=0;
-    // impulso salto
-
-persona.body.velocity.x += impulsoSalto;
-
-impulsoSalto *= 0.85;
+            this
+        );
 
 
-// movimiento voz
 
-if(moverDerecha){
+        //detiene horizontal
+        persona.body.velocity.x = 0;
+        // impulso salto
 
-    persona.body.velocity.x = 120;
+        persona.body.velocity.x += impulsoSalto;
 
-    persona.scale.x = 2;
-
-    persona.animations.play('derecha');
-}
+        impulsoSalto *= 0.85;
 
 
-if(moverIzquierda){
+        // movimiento voz
 
-    persona.body.velocity.x = -120;
+        if (moverDerecha) {
 
-    persona.scale.x = -2;
+            persona.body.velocity.x = 120;
 
-    persona.animations.play('derecha');
-}
+            persona.scale.x = 2;
 
-// =================================
-// ENEMIGO 1
-// =================================
+            persona.animations.play('derecha');
+            if (persona.x >= destinoX) {
 
-enemigo1.body.velocity.x =
-    40 * direccionEnemigo1;
+                moverDerecha = false;
 
-if(enemigo1.x > 1200){
+                persona.body.velocity.x = 0;
+            }
 
-    direccionEnemigo1 = -1;
-
-    enemigo1.scale.x = -1.2;
-}
-
-if(enemigo1.x < 1000){
-
-    direccionEnemigo1 = 1;
-
-    enemigo1.scale.x = 1.2;
-}
+        }
 
 
-// =================================
-// ENEMIGO 2
-// =================================
+        if (moverIzquierda) {
 
-enemigo2.body.velocity.x =
-    40 * direccionEnemigo2;
+            persona.body.velocity.x = -120;
 
-if(enemigo2.x > 720){
+            persona.scale.x = -2;
 
-    direccionEnemigo2 = -1;
-
-    enemigo2.scale.x = -1.2;
-}
-
-if(enemigo2.x < 560){
-
-    direccionEnemigo2 = 1;
-
-    enemigo2.scale.x = 1.2;
-}
+            persona.animations.play('derecha');
 
 
-// =================================
-// ENEMIGO 3
-// =================================
+            if (persona.x <= destinoX) {
 
-enemigo3.body.velocity.x =
-  40 * direccionEnemigo3;
+                moverIzquierda = false;
+
+                persona.body.velocity.x = 0;
+            }
+
+        }
+
+        // =================================
+        // ENEMIGO 1
+        // =================================
+
+        enemigo1.body.velocity.x =
+            40 * direccionEnemigo1;
+
+        if (enemigo1.x > 1200) {
+
+            direccionEnemigo1 = -1;
+
+            enemigo1.scale.x = -1.2;
+        }
+
+        if (enemigo1.x < 1000) {
+
+            direccionEnemigo1 = 1;
+
+            enemigo1.scale.x = 1.2;
+        }
 
 
-// limite derecha
+        // =================================
+        // ENEMIGO 2
+        // =================================
 
-if(enemigo3.x > 620){
+        enemigo2.body.velocity.x =
+            40 * direccionEnemigo2;
 
-    direccionEnemigo3 = -1;
+        if (enemigo2.x > 720) {
 
-    enemigo3.scale.x = -1.2;
-}
+            direccionEnemigo2 = -1;
 
-if(enemigo3.x < 400){
+            enemigo2.scale.x = -1.2;
+        }
 
-    direccionEnemigo3 = 1;
+        if (enemigo2.x < 560) {
 
-    enemigo3.scale.x = 1.2;
-}
+            direccionEnemigo2 = 1;
+
+            enemigo2.scale.x = 1.2;
+        }
+
+
+        // =================================
+        // ENEMIGO 3
+        // =================================
+
+        enemigo3.body.velocity.x =
+            40 * direccionEnemigo3;
+
+
+        // limite derecha
+
+        if (enemigo3.x > 620) {
+
+            direccionEnemigo3 = -1;
+
+            enemigo3.scale.x = -1.2;
+        }
+
+        if (enemigo3.x < 400) {
+
+            direccionEnemigo3 = 1;
+
+            enemigo3.scale.x = 1.2;
+        }
 
         // Movimiento y animaciones
         if (teclaDerecha.isDown) {
-             persona.body.velocity.x=200;
-          //  persona.position.x += 2;
+            persona.body.velocity.x = 200;
+            //  persona.position.x += 2;
             persona.animations.play('derecha');
-            persona.scale.x=2;
+            persona.scale.x = 2;
         }
         else if (teclaIzquierda.isDown) {
-            persona.body.velocity.x=-200;
-           // persona.position.x -= 2;
+            persona.body.velocity.x = -200;
+            // persona.position.x -= 2;
             persona.animations.play('derecha');
-            persona.scale.x=-2;
+            persona.scale.x = -2;
         }
-        else  {
+        /*  else {
+             persona.animations.stop();
+         } */
+
+        else if (
+            !moverDerecha &&
+            !moverIzquierda
+        ) {
+
             persona.animations.stop();
         }
-       // if (teclaSalto.isDown && persona.body.touching.down) {
-       if (teclaSalto.isDown &&( persona.body.touching.down || persona.body.blocked.down)) {
-             persona.body.velocity.y=-450;
+
+        // if (teclaSalto.isDown && persona.body.touching.down) {
+        if (teclaSalto.isDown && (persona.body.touching.down || persona.body.blocked.down)) {
+            persona.body.velocity.y = -450;
             persona.animations.play('saltar');
         }
 
         // disparar
 
-        if(teclaDisparo.justDown){
+        if (teclaDisparo.justDown) {
 
             dispararPiedra();
         }
 
 
-    
 
 
-if(persona.y > 500){
 
-    persona.kill();
+        if (persona.y > 500) {
 
-    fondoVictoria.visible = true;
+            persona.kill();
 
-    textoGameOver.visible = true;
+            fondoVictoria.visible = true;
 
-    botonReintentar.visible = true;
+            textoGameOver.visible = true;
 
-    botonMenu.visible = true;
-}
+            botonReintentar.visible = true;
+
+            botonMenu.visible = true;
+        }
 
 
 
@@ -1746,22 +1913,46 @@ if(persona.y > 500){
 };
 
 
-function reiniciarNivel2(){
+function reiniciarNivel2() {
+    if (reconocimiento) {
+        reconocimiento.stop();
+    }
+
+
+    detenerMusicas();
 
     juego.state.start('nivel2');
 }
 
 
-function volverNivel1(){
+function volverNivel1() {
+
+    if (reconocimiento) {
+        reconocimiento.stop();
+    }
+    detenerMusicas();
 
     juego.state.start('principal');
 }
-function perderJuego(){
+function perderJuego() {
 
-   persona.body.enable = false;
+    if (juegoTerminado) {
+        return;
+    }
+
+    juegoTerminado = true;
+
+    persona.body.enable = false;
 
     persona.kill();
 
+    if (musicaJuego) {
+
+        musicaJuego.stop();
+    }
+
+
+    sonidoGameOver.play();
     textoGameOver.visible = true;
 
     botonReintentar.visible = true;
@@ -1769,8 +1960,10 @@ function perderJuego(){
     botonMenu.visible = true;
 }
 
-function dispararPiedra(){
-
+function dispararPiedra() {
+    if (juegoTerminado) {
+        return;
+    }
     var piedra = disparos.create(
 
         persona.x,
@@ -1789,36 +1982,67 @@ function dispararPiedra(){
 
     // direccion
 
-    if(persona.scale.x > 0){
+    if (persona.scale.x > 0) {
 
         piedra.body.velocity.x = 300;
 
-    }else{
+    } else {
 
         piedra.body.velocity.x = -300;
     }
 }
 
-function destruirEnemigo(piedra,enemigo){
+function destruirEnemigo(enemigo, piedra) {
+
+    /*     piedra.kill();
+    
+        enemigo.kill(); */
+    if (juegoTerminado) {
+        return;
+    }
+
+    sonidoImpacto.play();
+    crearImpacto(
+        enemigo.x + enemigo.width / 2,
+
+        enemigo.y + enemigo.height / 2
+    );
 
     piedra.kill();
 
-    enemigo.kill();
+    enemigo.tint = 0xff0000;
+
+    juego.time.events.add(
+        100,
+        function () {
+            enemigo.kill();
+        },
+        this
+    );
+
+
 
 
     enemigosEliminados++;
     textoEnemigos.text =
 
-    'Españoles derrotados: ' +
+        'Españoles derrotados: ' +
 
-    enemigosEliminados +
+        enemigosEliminados +
 
-    '/3';
+        '/3';
 
     // ganar juego
 
-    if(enemigosEliminados >= 3){
+    if (enemigosEliminados >= 3) {
 
+        if (musicaJuego) {
+
+            musicaJuego.stop();
+        }
+
+        sonidoVictoria.play();
+        juegoTerminado = true;
         fondoVictoria.visible = true;
 
         textoVictoria.text =
@@ -1831,56 +2055,129 @@ function destruirEnemigo(piedra,enemigo){
 }
 
 
-function destruirDisparo(disparo,plataforma){
+function destruirDisparo(disparo, plataforma) {
 
     disparo.kill();
 }
+
+function crearImpacto(x, y) {
+
+    var impacto = juego.add.sprite(
+
+        x,
+
+        y,
+
+        'impacto'
+    );
+
+    impacto.anchor.setTo(0.5);
+
+    impacto.scale.setTo(1.5);
+
+    juego.add.tween(
+
+        impacto.scale
+
+    ).to(
+
+        { x: 1, y: 1 },
+
+        100,
+
+        Phaser.Easing.Linear.None,
+
+        true
+
+    );
+
+    juego.time.events.add(
+
+        200,
+
+        function () {
+
+            impacto.destroy();
+
+        },
+
+        this
+    );
+}
+
+
 
 
 
 var estadoMenu = {
 
-    preload: function(){
+    preload: function () {
         juego.load.image(
 
-    'menu',
+            'menu',
 
-    'img/portada.png'
-);
-    juego.load.spritesheet(
+            'img/portadaSinTitulo.png'
+        );
+        juego.load.image(
 
-        'personas',
+            'logoInkarri',
 
-        'img/personajeInca.png',
+            'img/inkarriTitulo.png'
+        );
 
-        24,
 
-        48
-    );
 
-    juego.load.spritesheet(
 
-        'tiles',
+        juego.load.image(
+            'botonJugar',
+            'img/botonJugar.png'
+        );
 
-        'img/tileset.png',
 
-        16,
+        juego.load.image(
 
-        16
-    );
-    juego.load.audio(
+            'botonInstruccion',
 
-        'musicaMenu',
+            'img/botonInstruccion.png'
+        );
 
-        'audio/audioPortada.mp3'
-    );
+
+
+
+        juego.load.spritesheet(
+
+            'personas',
+
+            'img/personajeInca.png',
+
+            24,
+
+            48
+        );
+
+        juego.load.spritesheet(
+
+            'tiles',
+
+            'img/tileset.png',
+
+            16,
+
+            16
+        );
+        juego.load.audio(
+
+            'musicaMenu',
+
+            'audio/audioPortada.mp3'
+        );
 
 
 
 
     },
 
-    create: function(){
+    create: function () {
         fondoMenu = juego.add.sprite(
 
             0,
@@ -1890,114 +2187,436 @@ var estadoMenu = {
         );
         fondoMenu.scale.setTo(4);
 
+        var logo = juego.add.sprite(
+
+            640,
+
+            143,
+
+            'logoInkarri'
+        );
+        logo.anchor.setTo(0.5);
+        logo.scale.setTo(4);
+
+        /* juego.add.tween(logo.scale)
+        .to(
+              {
+                x:4.04,
+                y:4.04
+            },
+            3000,
+            Phaser.Easing.Sinusoidal.InOut,
+            true,
+            0,
+            -1,
+            true
+        ); */
+
+
+
+
         musicaMenu = juego.add.audio(
 
-    'musicaMenu'
-);
+            'musicaMenu'
+        );
 
 
-musicaMenu.loop = true;
+        musicaMenu.loop = true;
 
 
-musicaMenu.volume = 0.2;
+        musicaMenu.volume = 0.2;
 
 
-musicaMenu.play();
+        musicaMenu.play();
 
         var inca = juego.add.sprite(
 
-                180,
-                240,
+            160,
+            225,
 
-                'personas'
-            );
+            'personas'
+        );
 
         inca.scale.setTo(4);
 
+        inca.animations.add(
 
+            'caminar',
 
-var jugar = juego.add.text(
+            [0, 1, 2],
 
-    560,
-    290,
+            5,
 
-    'JUGAR',
+            true
+        );
+        inca.animations.play(
 
-    {
+            'caminar'
+        );
 
-        font:'40px Arial',
+        // Escalera izquierda
 
-        fill:'#f4d35e',
-        stroke:'#3b2200',
+        for (var y = 0; y < 4; y++) {
 
-        strokeThickness:6
-    }
-);
+            for (var x = 0; x < (y + 1) * 4; x++) {
 
+                juego.add.sprite(
 
+                    x * 32,
 
+                    385 + (y * 32),
 
-
-jugar.inputEnabled = true;
-
-jugar.events.onInputDown.add(
-
-    iniciarJuego,
-
-    this
-);
+                    'tiles', 11
 
 
 
-
-// =================================
-// SUELO SUPERIOR
-// =================================
-
-for(var i = 0; i < 80; i++){
-
-    juego.add.sprite(
-
-        i * 16,
-
-        432,
-
-        'tiles',
-
-        6
-    );
-}
+                ).scale.setTo(2);
+            }
+        }
 
 
+        // Escalera derecha
+
+        for (var y = 0; y < 4; y++) {
+
+            for (var x = 0; x < (y + 1) * 4; x++) {
+
+                juego.add.sprite(
+
+                    1280 - ((y + 1) * 4 * 32) + (x * 32),
+
+                    385 + (y * 32),
+
+                    'tiles', 11
 
 
-// RELLENO TIERRA
-// =================================
 
-for(var y = 448; y < 480; y += 16){
+                ).scale.setTo(2);
+            }
+        }
 
-    for(var x = 0; x < 1280; x += 16){
+        // Plataforma central
+
+        // Plataforma central
+
+        for (var x = 14; x < 26; x++) {
+
+            juego.add.sprite(
+
+                x * 32,
+
+                448,
+
+                'tiles', 2
+
+
+
+            ).scale.setTo(2);
+
+        }
+
+
+        for (var x = 0; x < 3; x++) {
+
+            juego.add.sprite(
+
+                40 + (x * 16),
+
+                290
+                ,
+
+                'tiles',
+
+                6
+
+            ).scale.setTo(1);
+        }
+
+
+        for (var x = 0; x < 4; x++) {
+
+            juego.add.sprite(
+
+                1155 + (x * 16),
+
+                330
+                ,
+
+                'tiles',
+
+                6
+
+            ).scale.setTo(1);
+        }
+
+
+
 
         juego.add.sprite(
-
-            x,
-
-            y,
-
+            55,
+            275,
             'tiles',
+            9
+        ).scale.setTo(0.8);
 
-            12
+        juego.add.sprite(
+            60,
+            270,
+            'tiles',
+            9
+        ).scale.setTo(0.8);
+
+        juego.add.sprite(
+            65,
+            275,
+            'tiles',
+            9
+        ).scale.setTo(0.8);
+
+        //piedras menu derecha
+        juego.add.sprite(
+            1175,
+            315,
+            'tiles',
+            9
+        ).scale.setTo(0.8);
+
+        juego.add.sprite(
+            1183,
+            315,
+            'tiles',
+            9
+        ).scale.setTo(0.8);
+
+        juego.add.sprite(
+            1190,
+            315,
+            'tiles',
+            9
+        ).scale.setTo(0.8);
+
+        juego.add.sprite(
+            1179,
+            307,
+            'tiles',
+            9
+        ).scale.setTo(0.8);
+
+        juego.add.sprite(
+            1187,
+            307,
+            'tiles',
+            9
+        ).scale.setTo(0.8);
+
+        /* juego.add.sprite(
+            1184,
+            300,
+            'tiles',
+            9
+        ).scale.setTo(0.8); */
+
+
+
+        /* 
+                var jugar = juego.add.text(
+        
+                    560,
+                    290,
+        
+                    'JUGAR',
+        
+                    {
+        
+                        font: '40px Arial',
+        
+                        fill: '#f4d35e',
+                        stroke: '#3b2200',
+        
+                        strokeThickness: 6
+                    }
+                ); */
+        /* var fondoBoton = juego.add.graphics(0,0);
+        
+        fondoBoton.beginFill(0x5a2d0c);
+        fondoBoton.drawRoundedRect(
+            500,
+            270,
+            220,
+            70,
+            20
         );
-    }
-}
+        fondoBoton.endFill(); */
+        /* 
+        var jugar = juego.add.text(
+        
+            610,
+            305,
+        
+            'JUGAR',
+        
+            {
+                font:'40px Arial',
+                fill:'#f4d35e'
+            }
+        );
+         */
+        var botonJugar = juego.add.sprite(
+
+            640,
+
+            300,
+
+            'botonJugar'
+        );
+
+        botonJugar.anchor.setTo(0.5);
+        botonJugar.scale.setTo(1.5);
+        juego.add.tween(botonJugar.scale)
+            .to(
+                {
+                    x: 1.6,
+                    y: 1.6
+                },
+                2000,
+                Phaser.Easing.Sinusoidal.InOut,
+                true,
+                0,
+                -1,
+                true
+            );
 
 
 
-//acá termina el create
+
+
+        botonJugar.inputEnabled = true;
+
+        botonJugar.events.onInputDown.add(
+
+            iniciarJuego,
+
+            this
+        );
+
+
+        var botonInstrucciones = juego.add.sprite(
+
+            640,
+
+            384,
+
+            'botonInstruccion'
+        );
+        botonInstrucciones.scale.setTo(1.5);
+
+
+        botonInstrucciones.anchor.setTo(0.5);
+
+        juego.add.tween(botonInstrucciones.scale)
+            .to(
+                {
+                    x: 1.55,
+                    y: 1.55
+                },
+                2000,
+                Phaser.Easing.Sinusoidal.InOut,
+                true,
+                0,
+                -1,
+                true
+            );
+
+        botonInstrucciones.inputEnabled = true;
+
+        botonInstrucciones.events.onInputDown.add(
+
+            abrirInstrucciones,
+
+            this
+        );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /* 
+        jugar.anchor.setTo(0.5);
+        
+        
+        
+        
+        
+                jugar.inputEnabled = true;
+        
+                jugar.events.onInputDown.add(
+        
+                    iniciarJuego,
+        
+                    this
+                ); */
+
+
+
+
+        // =================================
+        // SUELO SUPERIOR
+        // =================================
+
+        /*       for (var i = 0; i < 80; i++) {
+      
+                  juego.add.sprite(
+      
+                      i * 16,
+      
+                      432,
+      
+                      'tiles',
+      
+                      6
+                  );
+              } */
+
+
+
+
+        // RELLENO TIERRA
+        // =================================
+
+        /*  for (var y = 448; y < 480; y += 16) {
+ 
+             for (var x = 0; x < 1280; x += 16) {
+ 
+                 juego.add.sprite(
+ 
+                     x,
+ 
+                     y,
+ 
+                     'tiles',
+ 
+                     12
+                 );
+             }
+         } */
+
+
+
+        //acá termina el create
     },
 
-    
-    update: function(){
+
+    update: function () {
 
 
 
@@ -2024,7 +2643,7 @@ var botonComenzar;
 var estadoHistoria = {
 
 
-   preload:function(){
+    preload: function () {
 
         juego.load.audio(
 
@@ -2041,9 +2660,9 @@ var estadoHistoria = {
 
 
 
-    create:function(){
+    create: function () {
 
-        musicaMenu.stop();
+        detenerMusicas();
 
         juego.stage.backgroundColor = '#000000';
 
@@ -2079,91 +2698,185 @@ var estadoHistoria = {
 
         textoHistoria = juego.add.text(
 
-    630,
+            630,
 
-    50,
+            50,
 
-    '',
+            '',
 
-    {
+            {
 
-        font:'30px Arial',
+                font: '30px Arial',
 
-        fill:'#ffffff',
+                fill: '#ffffff',
 
-        align:'center',
-        boundsAlignH:'center',
-
-
-        wordWrap:true,
-
-wordWrapWidth:700
-    }
-);
+                align: 'center',
+                boundsAlignH: 'center',
 
 
+                wordWrap: true,
 
-textoHistoria.anchor.setTo(0.5,0);
-
-botonComenzar = juego.add.text(
-
-    1000,
-
-    450,
-
-    'EMPEZAR',
-
-    {
- font:'40px Arial',
-
-    fill:'#ffffff'
-    }
-);
+                wordWrapWidth: 700
+            }
+        );
 
 
-botonComenzar.anchor.setTo(0.5);
+
+        textoHistoria.anchor.setTo(0.5, 0);
+
+        botonComenzar = juego.add.text(
+
+            1000,
+
+            450,
+
+            'EMPEZAR',
+
+            {
+                font: '40px Arial',
+
+                fill: '#ffffff'
+            }
+        );
 
 
-botonComenzar.alpha = 0;
+        botonComenzar.anchor.setTo(0.5);
 
 
-botonComenzar.inputEnabled = true;
+        botonComenzar.alpha = 0;
 
 
-botonComenzar.events.onInputDown.add(
+        botonComenzar.inputEnabled = true;
 
-    comenzarJuego,
 
-    this
-);
+        botonComenzar.events.onInputDown.add(
+
+            comenzarJuego,
+
+            this
+        );
 
     },
 
-    update:function(){
+    update: function () {
 
-if(indiceTexto < textoCompleto.length){
+        if (indiceTexto < textoCompleto.length) {
 
-    textoActual +=
+            textoActual +=
 
-        textoCompleto.charAt(indiceTexto);
-
-
-    textoHistoria.text = textoActual;
+                textoCompleto.charAt(indiceTexto);
 
 
-    indiceTexto++;
-}
+            textoHistoria.text = textoActual;
 
 
-else{
+            indiceTexto++;
+        }
 
-    botonComenzar.alpha = 1;
-}
+
+        else {
+
+            botonComenzar.alpha = 1;
+        }
 
 
 
     }
 };
+
+var estadoInstrucciones = {
+
+    create: function () {
+
+        juego.stage.backgroundColor = '#000000';
+
+
+
+        var titulo = juego.add.text(
+
+            640,
+
+            65,
+
+            'INSTRUCCIONES',
+
+            {
+
+                font: '40px Arial',
+
+                fill: '#ffff00'
+            }
+        );
+
+        titulo.anchor.setTo(0.5);
+
+
+
+        var texto = juego.add.text(
+
+            640,
+
+            230,
+
+            'Comandos de voz:\n\n' +
+
+            'Hacia la derecha: "Derecha" o "Avanza"\n' +
+
+            'Hacia la izquierda: "Izquierda" o "Atrás"\n' +
+
+            'Saltar:  "Salta"\n' +
+
+            'Lanzar piedra: "Dispara"\n' +
+
+            'Detenerse: "Alto"',
+
+            {
+
+                font: '28px Arial',
+
+                fill: '#ffffff',
+
+                align: 'center'
+            }
+        );
+
+        texto.anchor.setTo(0.5);
+
+
+
+        var volver = juego.add.text(
+
+            640,
+
+            415,
+
+            'VOLVER',
+
+            {
+
+                font: '32px Arial',
+
+                fill: '#ffffff'
+            }
+        );
+
+        volver.anchor.setTo(0.5);
+
+        volver.inputEnabled = true;
+
+        volver.events.onInputDown.add(
+
+            volverMenu,
+
+            this
+        );
+
+    }
+
+};
+
+
+
 
 
 
@@ -2178,22 +2891,84 @@ juego.state.add(
     estadoHistoria
 );
 
+juego.state.add(
+
+    'instrucciones',
+
+    estadoInstrucciones
+);
+
 juego.state.add('principal', estadoPrincipal);
-juego.state.add('nivel2',estadoNivel2);
+juego.state.add('nivel2', estadoNivel2);
 
 
 
 //juego.state.start('principal');
 juego.state.start('menu');
 
+function detenerMusicas() {
 
-function iniciarJuego(){
+    if (musicaMenu) {
+        musicaMenu.stop();
+    }
 
-    juego.state.start('historia');
+    if (musicaHistoria) {
+        musicaHistoria.stop();
+    }
+
+    if (musicaJuego) {
+        musicaJuego.stop();
+    }
 }
 
 
-function comenzarJuego(){
+
+
+function iniciarJuego() {
+    detenerMusicas();
+    if (reconocimiento) {
+        reconocimiento.stop();
+    }
+
+    juego.state.start('historia');
+
+    //juego.state.start('historia');
+}
+
+
+function comenzarJuego() {
+    detenerMusicas();
+    // juego.state.start('principal');
+    if (reconocimiento) {
+        reconocimiento.stop();
+    }
 
     juego.state.start('principal');
+
+
+}
+
+function abrirInstrucciones() {
+    if (reconocimiento) {
+        reconocimiento.stop();
+    }
+
+
+
+    juego.state.start(
+
+        'instrucciones'
+    );
+}
+
+function volverMenu() {
+    if (reconocimiento) {
+        reconocimiento.stop();
+    }
+
+    detenerMusicas();
+    juego.state.start(
+
+        'menu'
+    );
 }
